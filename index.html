@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduConnect - Teacher Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="src/auth.js"></script>
     <style>
         * {
             margin: 0;
@@ -251,6 +252,24 @@
             text-decoration: underline;
         }
 
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
         @media (min-width: 768px) {
             .container {
                 flex-direction: row;
@@ -289,12 +308,12 @@
                 <form class="form active" id="login-form">
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" placeholder="Email Address" required>
+                        <input type="email" name="email" placeholder="Email Address" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" placeholder="Password" required>
+                        <input type="password" name="password" placeholder="Password" required>
                     </div>
                     
                     <div class="remember-forgot">
@@ -305,7 +324,7 @@
                         <a href="#" class="forgot">Forgot Password?</a>
                     </div>
                     
-                    <button type="submit" class="btn">Login</button>
+                    <button type="submit" class="btn" id="login-btn">Login</button>
                     
                     <div class="divider">
                         <span>Or login with</span>
@@ -331,27 +350,27 @@
                 <form class="form" id="signup-form">
                     <div class="input-group">
                         <i class="fas fa-user"></i>
-                        <input type="text" placeholder="Full Name" required>
+                        <input type="text" name="fullName" placeholder="Full Name" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" placeholder="Email Address" required>
+                        <input type="email" name="email" placeholder="Email Address" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-school"></i>
-                        <input type="text" placeholder="School Name" required>
+                        <input type="text" name="schoolName" placeholder="School Name" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" placeholder="Password" required>
+                        <input type="password" name="password" placeholder="Password" required minlength="6">
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" placeholder="Confirm Password" required>
+                        <input type="password" name="confirmPassword" placeholder="Confirm Password" required minlength="6">
                     </div>
                     
                     <div class="remember">
@@ -359,7 +378,7 @@
                         <label for="terms">I agree to the <a href="#" style="color: #4a6fa5;">Terms & Conditions</a></label>
                     </div>
                     
-                    <button type="submit" class="btn" style="margin-top: 20px;">Create Account</button>
+                    <button type="submit" class="btn" id="signup-btn" style="margin-top: 20px;">Create Account</button>
                     
                     <div class="signup-link">
                         Already have an account? <a href="#" onclick="showForm('login')">Login</a>
@@ -379,6 +398,70 @@
             document.querySelectorAll('.form').forEach(form => form.classList.remove('active'));
             document.getElementById(formType + '-form').classList.add('active');
         }
+
+        // Handle form submissions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', async function(e) {
+                e.preventDefault()
+                
+                const formData = new FormData(this)
+                const email = formData.get('email')
+                const password = formData.get('password')
+                
+                const loginBtn = document.getElementById('login-btn')
+                loginBtn.disabled = true
+                loginBtn.textContent = 'Logging in...'
+                
+                const result = await window.authManager.handleLogin(email, password)
+                
+                loginBtn.disabled = false
+                loginBtn.textContent = 'Login'
+                
+                if (result.success) {
+                    this.reset()
+                }
+            })
+            
+            // Signup form
+            document.getElementById('signup-form').addEventListener('submit', async function(e) {
+                e.preventDefault()
+                
+                const formData = new FormData(this)
+                const fullName = formData.get('fullName')
+                const email = formData.get('email')
+                const schoolName = formData.get('schoolName')
+                const password = formData.get('password')
+                const confirmPassword = formData.get('confirmPassword')
+                const termsAccepted = formData.get('terms')
+                
+                // Validation
+                if (password !== confirmPassword) {
+                    window.authManager.showMessage('Passwords do not match', 'error')
+                    return
+                }
+                
+                if (!termsAccepted) {
+                    window.authManager.showMessage('Please accept the terms and conditions', 'error')
+                    return
+                }
+                
+                const signupBtn = document.getElementById('signup-btn')
+                signupBtn.disabled = true
+                signupBtn.textContent = 'Creating Account...'
+                
+                const result = await window.authManager.handleSignup(email, password, fullName, schoolName)
+                
+                signupBtn.disabled = false
+                signupBtn.textContent = 'Create Account'
+                
+                if (result.success) {
+                    this.reset()
+                    // Switch to login form after successful signup
+                    setTimeout(() => showForm('login'), 2000)
+                }
+            })
+        })
     </script>
 </body>
 </html>
