@@ -123,10 +123,8 @@ class AuthManager {
   }
 
   redirectToDashboard() {
-    // For now, just show a success message
-    // In a real app, you would redirect to the dashboard
     setTimeout(() => {
-      this.showMessage('Welcome to EduConnect! Dashboard coming soon...', 'success')
+      window.location.href = 'dashboard.html'
     }, 1000)
   }
 
